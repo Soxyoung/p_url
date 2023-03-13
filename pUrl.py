@@ -3,15 +3,25 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+import time
 
 # 原创自拍区 https://t0302.91p01.app/forumdisplay.php?fid=4&page=1
 # 原创申请 https://t0302.91p01.app/forumdisplay.php?fid=19
 # 我爱我妻 https://t0302.91p01.app/forumdisplay.php?fid=21
 
+time_limit = 4.1
+
 host = 't0302.91p01.app'
 
+map = {}
+
 def copyThread(host, tid):
-    urls = ""
+
+    col = set()
+
+    if (tid in map):
+        col = map[tid]
+
     try:
         thread_url = 'http://' + host + '/viewthread.php?tid=' + tid
 
@@ -40,16 +50,8 @@ def copyThread(host, tid):
 
         soup = BeautifulSoup(html, "html.parser")
         threadtitle = soup.find('h1').text
-        file_name = tid + '_' + threadtitle
 
-        try:
-            print(file_name)
-        except:
-            print(tid)
-
-        soup = BeautifulSoup(html, "html.parser")
-        threadtitle = soup.find('h1').text
-        # print(tid, threadtitle)
+        col.add(threadtitle.strip())
         postlist = soup.find_all("div", {"class" : "t_msgfontfix"})
 
         for post in postlist:
@@ -59,7 +61,8 @@ def copyThread(host, tid):
                 try:
                     url = img["file"]
                     # print(url)
-                    urls += url + "\n"
+                    # urls += url + "\n"
+                    col.add(url)
                 except:
                     pass
 
@@ -76,12 +79,7 @@ def copyThread(host, tid):
                 html = response.text
 
                 soup = BeautifulSoup(html, "html.parser")
-                #threadtitle = soup.find('h1').text
-                file_name = tid
 
-                soup = BeautifulSoup(html, "html.parser")
-                # threadtitle = soup.find('h1').text
-                # print(tid, threadtitle)
                 postlist = soup.find_all("div", {"class" : "t_msgfontfix"})
 
                 for post in postlist:
@@ -91,18 +89,17 @@ def copyThread(host, tid):
                         try:
                             url = img["file"]
                             # print(url)
-                            urls += url + "\n"
+                            col.add(url)
                         except:
                             pass
 
             except:
                 pass
 
-        if (not urls.strip().isspace()):
-            print(urls)
-        print(tid, threadtitle, "____DONE!")
-    except:
-        print(tid, threadtitle, "____ERROR!")
+        map[tid] = col
+
+    except Exception as ee:
+        print(tid, "____ERROR!", ee)
         pass
 
 def findTids(thread_url):
@@ -139,24 +136,24 @@ def findTids(thread_url):
         # print(tid[tid.find('_') + 1:])
     return tids
 
-for page in range(1, 2):
-    tids = findTids('http://' + host + '/forumdisplay.php?fid=19&page=' + str(page))
-    for tid in tids:
-        try:
-            copyThread(host, tid)
-        except:
-            pass
+delta_max = (int)(((float)(time_limit))*60*60)
+start = time.time()
 
-    tids = findTids('http://' + host + '/forumdisplay.php?fid=21&page=' + str(page))
-    for tid in tids:
-        try:
-            copyThread(host, tid)
-        except:
-            pass
-
-    tids = findTids('http://' + host + '/forumdisplay.php?fid=19&page=' + str(page))
-    for tid in tids:
-        try:
-            copyThread(host, tid)
-        except:
-            pass
+while True:
+    now = time.time()
+    delta = (int)(now - start)
+    if (delta >= delta_max):
+        # print(utc_now.astimezone(SHA_TZ).strftime("%Y-%m-%d %H:%M:%S.%f"),"触发超时巡检退出条件，结束运行！")
+        print("触发超时巡检退出条件，结束运行！")
+        print(map.items())
+        exit(0)
+    else:
+        for page in range(1, 3):
+            for fid in (4, 19, 21):
+                tids = findTids('http://' + host + '/forumdisplay.php?fid=' + str(fid) + '&page=' + str(page))
+                for tid in tids:
+                    try:
+                        copyThread(host, tid)
+                    except Exception as e:
+                        print(e)
+                        pass
