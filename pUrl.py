@@ -1,10 +1,8 @@
 # coding:utf-8
 
-import hashlib
 import re
 import requests
 from bs4 import BeautifulSoup
-import os
 
 # 原创自拍区 https://t0302.91p01.app/forumdisplay.php?fid=4&page=1
 # 原创申请 https://t0302.91p01.app/forumdisplay.php?fid=19
