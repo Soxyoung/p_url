@@ -9,7 +9,7 @@ import time
 # 原创申请 https://t0302.91p01.app/forumdisplay.php?fid=19
 # 我爱我妻 https://t0302.91p01.app/forumdisplay.php?fid=21
 
-time_limit = 4.1
+time_limit = 0.1
 
 host = 't0302.91p01.app'
 
